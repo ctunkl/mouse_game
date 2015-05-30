@@ -1,0 +1,3 @@
+rootProject.name = 'mouserace'
+
+include 'common', 'server', 'client'

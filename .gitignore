@@ -1,0 +1,33 @@
+bin/
+build/
+out/
+generated-src/
+target/
+
+# Deliverable artifacts #
+*.class
+*.jar
+!gradle-wrapper.jar
+*.war
+*.ear
+
+# Gradle files #
+.gradle
+gradle-app.setting
+
+# IntelliJ Project Files #
+*.iml
+.idea/
+*.ipr
+*.iws
+.idea_modules/
+
+# Eclipse Project Files #
+.project
+.classpath
+.settings/
+.externalToolBuilders/
+.metadata/
+
+#OSX specific temporary files
+.DS_Store
