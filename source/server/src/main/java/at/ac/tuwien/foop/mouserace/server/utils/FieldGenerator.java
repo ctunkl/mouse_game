@@ -52,7 +52,7 @@ public class FieldGenerator {
 			row = rows.get(y);
 
 			for(int x=0; x<WIDTH; x++) {
-				field.setCell(x, y, cellForCharacter(row.charAt(y)));
+				field.setCell(x, y, cellForCharacter(row.charAt(x)));
 			}
 		}
 
