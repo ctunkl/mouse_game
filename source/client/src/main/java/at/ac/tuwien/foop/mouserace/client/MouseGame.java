@@ -1,6 +1,7 @@
 package at.ac.tuwien.foop.mouserace.client;
 
-import at.ac.tuwien.foop.mouserace.client.event.GameEventListener;
+import at.ac.tuwien.foop.mouserace.client.event.EventDispatcher;
+import at.ac.tuwien.foop.mouserace.client.event.MouseGameEventType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,25 +10,18 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 import static at.ac.tuwien.foop.mouserace.client.MouseGameOptions.GAME_SIZE;
-import static at.ac.tuwien.foop.mouserace.client.MouseGameOptions.TICK_INTERVAL_IN_SEC;
+import static at.ac.tuwien.foop.mouserace.client.event.MouseGameEventType.*;
 
 public class MouseGame extends JPanel implements ActionListener {
 
-    private Timer timer;
     private boolean gameStarted = false;
 
-    public MouseGame(GameEventListener listener) {
-        initGame();
-        addKeyListener(new KeyAdapter(listener));
+    public MouseGame(EventDispatcher<MouseGameEventType> dispatcher) {
+        addKeyListener(new KeyAdapter(dispatcher));
 
         setFocusable(true);
         setBackground(Color.black);
         setDoubleBuffered(true);
-    }
-
-    private void initGame() {
-        timer = new Timer(TICK_INTERVAL_IN_SEC, this);
-        timer.start();
     }
 
     @Override
@@ -40,7 +34,7 @@ public class MouseGame extends JPanel implements ActionListener {
         super.paintComponent(g);
 
         if (gameStarted) {
-
+            //TODO
         } else {
             showWaitingScreen(g);
         }
@@ -61,10 +55,10 @@ public class MouseGame extends JPanel implements ActionListener {
 
     private class KeyAdapter extends java.awt.event.KeyAdapter {
 
-        private final GameEventListener listener;
+        private EventDispatcher<MouseGameEventType> dispatcher;
 
-        KeyAdapter(GameEventListener listener) {
-            this.listener = listener;
+        private KeyAdapter(EventDispatcher<MouseGameEventType> dispatcher) {
+            this.dispatcher = dispatcher;
         }
 
         @Override
@@ -72,23 +66,20 @@ public class MouseGame extends JPanel implements ActionListener {
             int key = keyEvent.getKeyCode();
 
             switch (key) {
-                case 'S':
-                    gameStarted = true;
-                    break;
                 case KeyEvent.VK_LEFT:
-                    listener.leftArrowPressed();
+                    dispatcher.publishEvent(LEFT_ARROW_PRESSED);
                     break;
                 case KeyEvent.VK_RIGHT:
-                    listener.rightArrowPressed();
+                    dispatcher.publishEvent(RIGHT_ARROW_PRESSED);
                     break;
                 case KeyEvent.VK_UP:
-                    listener.upArrowPressed();
+                    dispatcher.publishEvent(UP_ARROW_PRESSED);
                     break;
                 case KeyEvent.VK_DOWN:
-                    listener.downArrowPressed();
+                    dispatcher.publishEvent(DOWN_ARROW_PRESSED);
                     break;
                 case KeyEvent.VK_ESCAPE:
-                    listener.gameStopped();
+                    dispatcher.publishEvent(GAME_STOPPED);
                     gameStarted = false;
                     break;
             }
