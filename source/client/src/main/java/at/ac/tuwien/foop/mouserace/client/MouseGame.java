@@ -1,64 +1,95 @@
 package at.ac.tuwien.foop.mouserace.client;
 
 import at.ac.tuwien.foop.mouserace.client.event.EventDispatcher;
-import at.ac.tuwien.foop.mouserace.client.event.MouseGameEventType;
+import at.ac.tuwien.foop.mouserace.client.event.NetworkEventType;
+import at.ac.tuwien.foop.mouserace.client.event.UIEventType;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 import static at.ac.tuwien.foop.mouserace.client.MouseGameOptions.GAME_SIZE;
-import static at.ac.tuwien.foop.mouserace.client.event.MouseGameEventType.*;
+import static at.ac.tuwien.foop.mouserace.client.event.NetworkEventType.*;
+import static at.ac.tuwien.foop.mouserace.client.event.UIEventType.*;
 
-public class MouseGame extends JPanel implements ActionListener {
+public class MouseGame extends JPanel {
 
-    private boolean gameStarted = false;
+    private boolean waitingForServerStarting = true;
+    private boolean waitingForUserStarting = true;
+    private boolean waitingForServer = true;
 
-    public MouseGame(EventDispatcher<MouseGameEventType> dispatcher) {
-        addKeyListener(new KeyAdapter(dispatcher));
+    public MouseGame(EventDispatcher<UIEventType> uiDispatcher, EventDispatcher<NetworkEventType> networkDispatcher) {
+        addKeyListener(new KeyAdapter(uiDispatcher));
 
         setFocusable(true);
         setBackground(Color.black);
         setDoubleBuffered(true);
-    }
 
-    @Override
-    public void actionPerformed(ActionEvent actionEvent) {
-        repaint();
+
+        networkDispatcher.subscribeTo(READY, e -> {
+            waitingForServer = false;
+            waitingForUserStarting = true;
+            waitingForServerStarting = true;
+            //TODO: e -> <map>, <figures>, <own mouse>
+        });
+        uiDispatcher.subscribeTo(GAME_STOPPED, e -> {
+            waitingForServer = true;
+            waitingForUserStarting = true;
+            waitingForServerStarting = true;
+            networkDispatcher.publishEvent(NetworkEventType.ABORT);
+        });
+        uiDispatcher.subscribeTo(START_PRESSED, e -> {
+            waitingForUserStarting = false;
+            waitingForServer = false;
+            waitingForServerStarting = true;
+            networkDispatcher.publishEvent(ACK_READY);
+        });
+        networkDispatcher.subscribeTo(START, e -> {
+            waitingForServer = false;
+            waitingForUserStarting = false;
+            waitingForServerStarting = false;
+        });
+        networkDispatcher.subscribeTo(END, e -> {
+            waitingForServer = false;
+            waitingForUserStarting = false;
+            waitingForServerStarting = false;
+            //TODO: e -> display who's won or error conditions
+        });
+
+        networkDispatcher.publishEvent(REGISTER);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (gameStarted) {
-            //TODO
-        } else {
-            showWaitingScreen(g);
+        if (waitingForServer) {
+            showScreen("Waiting for the Server for initial response", g);
+        } else if (waitingForUserStarting) {
+            showScreen("To start the game press 's'", g);
+        } else if (waitingForServerStarting) {
+            showScreen("Waiting for the Server to start the game", g);
         }
 
         Toolkit.getDefaultToolkit().sync();
         g.dispose();
     }
 
-    private void showWaitingScreen(Graphics g) {
+    private void showScreen(String text, Graphics g) {
         Font font = new Font("Helvetica", Font.BOLD, 12);
         FontMetrics m = this.getFontMetrics(font);
 
         g.setColor(Color.white);
         g.setFont(font);
-        String text = "Waiting for the Server to start the game !";
         g.drawString(text, (GAME_SIZE - m.stringWidth(text)) / 2, GAME_SIZE / 2);
     }
 
     private class KeyAdapter extends java.awt.event.KeyAdapter {
 
-        private EventDispatcher<MouseGameEventType> dispatcher;
+        private EventDispatcher<UIEventType> uiDispatcher;
 
-        private KeyAdapter(EventDispatcher<MouseGameEventType> dispatcher) {
-            this.dispatcher = dispatcher;
+        private KeyAdapter(EventDispatcher<UIEventType> uiDispatcher) {
+            this.uiDispatcher = uiDispatcher;
         }
 
         @Override
@@ -66,21 +97,26 @@ public class MouseGame extends JPanel implements ActionListener {
             int key = keyEvent.getKeyCode();
 
             switch (key) {
+                case 's':
+                    uiDispatcher.publishEvent(START_PRESSED);
+                    break;
+                case 'S':
+                    uiDispatcher.publishEvent(START_PRESSED);
+                    break;
                 case KeyEvent.VK_LEFT:
-                    dispatcher.publishEvent(LEFT_ARROW_PRESSED);
+                    uiDispatcher.publishEvent(LEFT_ARROW_PRESSED);
                     break;
                 case KeyEvent.VK_RIGHT:
-                    dispatcher.publishEvent(RIGHT_ARROW_PRESSED);
+                    uiDispatcher.publishEvent(RIGHT_ARROW_PRESSED);
                     break;
                 case KeyEvent.VK_UP:
-                    dispatcher.publishEvent(UP_ARROW_PRESSED);
+                    uiDispatcher.publishEvent(UP_ARROW_PRESSED);
                     break;
                 case KeyEvent.VK_DOWN:
-                    dispatcher.publishEvent(DOWN_ARROW_PRESSED);
+                    uiDispatcher.publishEvent(DOWN_ARROW_PRESSED);
                     break;
                 case KeyEvent.VK_ESCAPE:
-                    dispatcher.publishEvent(GAME_STOPPED);
-                    gameStarted = false;
+                    uiDispatcher.publishEvent(GAME_STOPPED);
                     break;
             }
         }

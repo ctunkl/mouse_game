@@ -24,16 +24,27 @@ public class Field {
 	}
 
 	/**
-	 * Sets the cell on position (x, y).
+	 * Sets the cell on position (x, y). In addition it sets the position attributes (x, y) of the
+	 * new cell and unsets the position attributes (x, y) of the old cell.
+	 *
 	 * @param x the width index in the interval [0, width-1]
 	 * @param y the height index in the interval [0, height-1]
 	 * @param cell the cell which will be set on the specified position
+	 * @return the old cell at the specified position
 	 */
-	public void setCell(int x, int y, Cell cell) {
+	public Cell setCell(int x, int y, Cell cell) {
 		if(!checkPosition(x, y))
 			throw new IllegalArgumentException("Either x or y is out of range");
+		Objects.requireNonNull(cell, "cell must not be null");
 
-		cells[x][y] = Objects.requireNonNull(cell);
+		Cell oldCell = cells[x][y];
+		if(oldCell != null) {
+			oldCell.unsetFieldPosition();
+		}
+		cell.setFieldPosition(x, y);
+		cells[x][y] = cell;
+
+		return oldCell;
 	}
 
 	public Cell getCell(int x, int y) {
