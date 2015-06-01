@@ -56,9 +56,19 @@ public class GameEngine {
 			if(f instanceof Cheese) {
 				this.cheese = (Cheese) f;
 			}
+
+			printFigureWithPosition(f);
 		}
 
 		Objects.requireNonNull(cheese, "No cheese found");
+	}
+
+	private void printFigureWithPosition(Figure f) {
+		System.out.println(String.format("%s %d: Position (%d/%d)",
+				f.getClass().getSimpleName(),
+				f.getId(),
+				f.getX(),
+				f.getY()));
 	}
 
 	public void startGame() {
@@ -90,10 +100,24 @@ public class GameEngine {
 
 		for(Mouse m : this.mice) {
 			moveMouse(m);
+			checkForCollisions();
 
 			if(hasReachedCheese(m)) {
 				endGame(m);
 				return;
+			}
+		}
+	}
+
+	private void checkForCollisions() {
+		for(Mouse a : this.mice) {
+			for(Mouse b : this.mice) {
+				if(a.getId() != b.getId()) {
+					if(a.getX() == b.getX() && a.getY() == b.getY()) {
+						mouseCollision(a);
+						mouseCollision(b);
+					}
+				}
 			}
 		}
 	}
@@ -113,6 +137,19 @@ public class GameEngine {
 		Integer newX = m.getX();
 		Integer newY = m.getY();
 
+		if(m.getState().equals(MouseState.SNIFFING)) {
+			int remainingTicks = sniffingMice.getOrDefault(m, 0);
+
+			if(remainingTicks == 0) {
+				m.setState(MouseState.CONFUSED);
+				System.out.println(String.format("  Mouse %d: Stopped sniffing. Gonna move randomly now.", m.getId()));
+				confusedMice.put(m,  options.getConfusedTime());
+			} else {
+				sniffingMice.put(m,  remainingTicks-1);
+				System.out.println(String.format("  Mouse %d: Gonna keep sniffing for %s more ticks.", m.getId(), remainingTicks-1));
+			}
+		}
+
 		if(m.getState().equals(MouseState.NORMAL)) {
 			Optional<Cell> nextCell = nextCell(m.getX(), m.getY());
 
@@ -130,18 +167,6 @@ public class GameEngine {
 				System.out.println(String.format("  Mouse %d: No idea where to go.", m.getId()));
 				m.setState(MouseState.CONFUSED);
 				confusedMice.put(m, options.getConfusedTime());
-			}
-		}
-		else if(m.getState().equals(MouseState.SNIFFING)) {
-			int remainingTicks = sniffingMice.getOrDefault(m, 0);
-
-			if(remainingTicks == 0) {
-				m.setState(MouseState.CONFUSED);
-				System.out.println(String.format("  Mouse %d: Stopped sniffing. Gonna move randomly now.", m.getId()));
-				confusedMice.put(m,  options.getConfusedTime());
-			} else {
-				sniffingMice.put(m,  remainingTicks-1);
-				System.out.println(String.format("  Mouse %d: Gonna keep sniffing for %s more ticks.", m.getId(), remainingTicks-1));
 			}
 		}
 		else if(m.getState().equals(MouseState.CONFUSED)) {
@@ -169,12 +194,13 @@ public class GameEngine {
 		}
 	}
 
-	private void mouseCollision(Mouse a, Mouse b) {
-		a.setState(MouseState.SNIFFING);
-		b.setState(MouseState.SNIFFING);
+	private void mouseCollision(Mouse m) {
+		if(m.getState().equals(MouseState.SNIFFING) == false) {
+			m.setState(MouseState.SNIFFING);
+			sniffingMice.put(m, options.getSniffingTime());
 
-		sniffingMice.put(a, options.getSniffingTime());
-		sniffingMice.put(b, options.getSniffingTime());
+			System.out.println(String.format("  Mouse %d: Encountered another mouse. *sniff*", m.getId()));
+		}
 	}
 
 	/**
@@ -228,7 +254,6 @@ public class GameEngine {
 		coords.add(new Tuple<>(x, y+1));
 		coords.add(new Tuple<>(x-1, y));
 		coords.add(new Tuple<>(x+1, y));
-
 
 		for(Tuple<Integer, Integer> tuple : coords) {
 			try {
