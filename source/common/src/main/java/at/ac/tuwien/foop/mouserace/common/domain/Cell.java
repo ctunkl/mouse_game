@@ -31,6 +31,9 @@ public abstract class Cell {
 	 * @param y the height index in the interval [0, height-1]
 	 */
 	protected void setFieldPosition(int x, int y) {
+		if(x < 0 || y < 0)
+			throw new IllegalArgumentException("Both parameters must be positive");
+
 		this.x = x;
 		this.y = y;
 	}

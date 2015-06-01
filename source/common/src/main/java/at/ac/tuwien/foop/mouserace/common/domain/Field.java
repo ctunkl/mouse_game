@@ -35,7 +35,7 @@ public class Field {
 	public Cell setCell(int x, int y, Cell cell) {
 		if(!checkPosition(x, y))
 			throw new IllegalArgumentException("Either x or y is out of range");
-		Objects.requireNonNull(cell);
+		Objects.requireNonNull(cell, "cell must not be null");
 
 		Cell oldCell = cells[x][y];
 		if(oldCell != null) {
