@@ -16,14 +16,15 @@ public class MouseRace extends JFrame {
     private static final Dimension windowDimension = new Dimension(360, 420);
 
     public MouseRace() {
-        EventDispatcher<UIEventType> uiUispatcher = new EventDispatcher<>();
+        EventDispatcher<UIEventType> uiDispatcher = new EventDispatcher<>();
         EventDispatcher<NetworkEventType> networkDispatcher = new EventDispatcher<>();
-        add(new MouseGame(uiUispatcher, networkDispatcher));
+
+        add(new MouseGame(uiDispatcher, networkDispatcher));
         setTitle("Mouse Race v0.1");
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent windowEvent) {
-                uiUispatcher.publishEvent(GAME_STOPPED);
+                uiDispatcher.publishEvent(GAME_STOPPED);
             }
         });
         setDefaultCloseOperation(EXIT_ON_CLOSE);
