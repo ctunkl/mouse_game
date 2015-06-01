@@ -93,9 +93,9 @@ public class GameEngine {
 
 		// TODO receive key presses from players
 		List<Direction> directions = Arrays.asList(Direction.UP, Direction.UP, Direction.LEFT,
-						Direction.LEFT, Direction.DOWN, Direction.RIGHT);
+						Direction.LEFT, Direction.DOWN, Direction.LEFT);
 
-		Wind wind = calculateWind(directions);
+		Wind wind = calculateWind(game.getWind(), directions);
 		game.setWind(wind);
 
 		for(Mouse m : this.mice) {
@@ -150,26 +150,7 @@ public class GameEngine {
 			}
 		}
 
-		if(m.getState().equals(MouseState.NORMAL)) {
-			Optional<Cell> nextCell = nextCell(m.getX(), m.getY());
-
-			if(nextCell.isPresent()) {
-				newX = nextCell.get().getX();
-				newY = nextCell.get().getY();
-
-				System.out.println(String.format("  Mouse %d: Moving from (%d,%d) to (%d,%d)",
-						m.getId(), m.getX(), m.getY(), newX, newY));
-
-				m.setX(newX);
-				m.setY(newY);
-
-			} else {
-				System.out.println(String.format("  Mouse %d: No idea where to go.", m.getId()));
-				m.setState(MouseState.CONFUSED);
-				confusedMice.put(m, options.getConfusedTime());
-			}
-		}
-		else if(m.getState().equals(MouseState.CONFUSED)) {
+		if(m.getState().equals(MouseState.CONFUSED)) {
 			int remainingTicks = confusedMice.getOrDefault(m, 0);
 
 			if(remainingTicks == 0) {
@@ -192,6 +173,26 @@ public class GameEngine {
 				m.setY(nextCell.getY());
 			}
 		}
+
+		if(m.getState().equals(MouseState.NORMAL)) {
+			Optional<Cell> nextCell = nextCell(m.getX(), m.getY());
+
+			if(nextCell.isPresent()) {
+				newX = nextCell.get().getX();
+				newY = nextCell.get().getY();
+
+				System.out.println(String.format("  Mouse %d: Moving from (%d,%d) to (%d,%d)",
+						m.getId(), m.getX(), m.getY(), newX, newY));
+
+				m.setX(newX);
+				m.setY(newY);
+
+			} else {
+				System.out.println(String.format("  Mouse %d: No idea where to go.", m.getId()));
+				m.setState(MouseState.CONFUSED);
+				confusedMice.put(m, options.getConfusedTime());
+			}
+		}
 	}
 
 	private void mouseCollision(Mouse m) {
@@ -205,15 +206,15 @@ public class GameEngine {
 
 	/**
 	 * For given coordinates, returns all empty neighbour cells which lead
-	 * closer to the cheese
+	 * closer to a given cell
 	 */
-	public List<Cell> neighboursLeadingToCheese(int x, int y) {
+	public List<Cell> neighboursLeadingToCell(int x, int y, Cell cell) {
 		List<Cell> cells = emptyNeighbours(x, y);
 
-		Integer currentDistance = manhattanDistance(x, y, cheese.getX(), cheese.getY());
+		Integer currentDistance = manhattanDistance(x, y, cell.getX(), cell.getY());
 
 		return cells.stream().filter(
-				c -> manhattanDistance(c.getX(), c.getY(), cheese.getX(), cheese.getY()) < currentDistance)
+				c -> manhattanDistance(c.getX(), c.getY(), cell.getX(), cell.getY()) < currentDistance)
 				.collect(Collectors.toList());
 	}
 
@@ -222,13 +223,55 @@ public class GameEngine {
 	 * Currently: Picks any cell which leads closer to the cheese
 	 */
 	public Optional<Cell> nextCell(int x, int y) {
-		List<Cell> cells = neighboursLeadingToCheese(x, y);
+		Cell target = calculateTargetCell(game.getWind(), cheese);
+
+		List<Cell> cells = neighboursLeadingToCell(x, y, target);
 
 		if(cells.isEmpty()) {
 			return Optional.empty();
 		} else {
 			return Optional.of(cells.get(0));
 		}
+	}
+
+	/**
+	 * Uses the wind to determine a new target cell for the mice,
+	 * relative to the cheese
+	 */
+	private Cell calculateTargetCell(Wind wind, Cheese cheese) {
+		double relativeSpeedX = (double)wind.getSpeedX()/Wind.MAX_WIND;
+		double relativeSpeedY = (double)wind.getSpeedY()/Wind.MAX_WIND;
+
+		int newX = moveCoordinate(cheese.getX(), game.getField().getWidth(), relativeSpeedX);
+		int newY = moveCoordinate(cheese.getY(), game.getField().getHeight(), relativeSpeedY);
+
+		System.out.println(String.format("The Wind makes it seem like the cheese is actually at (%d/%d)", newX, newY));
+
+		return game.getField().getCell(newX, newY);
+	}
+
+	/**
+	 * Given an origin coordinate, moves it relatively along its axis
+	 * e.g.
+	 * 		offset -1: returns the coordinate of the left/top end
+	 * 		offset  1: returns the coordinate of right/bottom end
+	 * 		offset  0: returns the origin
+	 * 		offset: 0.5: halfway between origin and the right/bottom end
+	 * 		etc.
+	 *
+	 * @param origin the coordinate
+	 * @param length the full length of the axis
+	 * @param relativeOffset relative offset. must be between -1 and 1
+	 * @return
+	 */
+	private int moveCoordinate(int origin, int length, double relativeOffset) {
+		int cells;
+		if(relativeOffset > 0) {
+			cells = length - 1 - origin;
+		} else {
+			cells = origin;
+		}
+		return origin + (int)(cells * relativeOffset);
 	}
 
 
@@ -268,9 +311,7 @@ public class GameEngine {
 	/**
 	 *  Calculate new wind based on player input
 	 */
-	public Wind calculateWind(Collection<Direction> directions) {
-		Wind wind = new Wind();
-
+	public Wind calculateWind(Wind wind, Collection<Direction> directions) {
 		// count how many players voted for each direction
 		Map<Direction, Long> counted = directions.stream().collect(
 				Collectors.groupingBy(o -> o, Collectors.counting()));
@@ -285,8 +326,9 @@ public class GameEngine {
 		int speedX = Math.min(Math.max(right - left, Wind.MIN_WIND), Wind.MAX_WIND);
 		int speedY = Math.min(Math.max(up - down, Wind.MIN_WIND), Wind.MAX_WIND);
 
-		wind.setSpeedX((byte) speedX);
-		wind.setSpeedY((byte) speedY);
+		Wind newWind = new Wind();
+		newWind.setSpeedX((byte) speedX);
+		newWind.setSpeedY((byte) speedY);
 
 		return wind;
 	}
