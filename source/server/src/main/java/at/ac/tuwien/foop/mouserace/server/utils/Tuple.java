@@ -8,4 +8,9 @@ public class Tuple<A, B> {
 		this.left = left;
 		this.right = right;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("(left = %s, right = %s)", left, right);
+	}
 }
