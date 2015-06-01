@@ -42,4 +42,13 @@ public abstract class Cell {
 		this.x = null;
 		this.y = null;
 	}
+
+	/**
+	 * Determines if this cell is currently positioned on a game field.
+	 *
+	 * @return true if and only if both position member fields (x, y) are set.
+	 */
+	public boolean isOnField() {
+		return this.x != null && this.y != null;
+	}
 }
