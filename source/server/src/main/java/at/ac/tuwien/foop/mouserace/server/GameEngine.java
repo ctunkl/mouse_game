@@ -70,7 +70,7 @@ public class GameEngine {
 				GameEngine.this.play();
 
 			}
-		}, 0, options.getTickSeconds() * 1000);
+		}, 0, options.getTickMillis());
 	}
 
 	/**

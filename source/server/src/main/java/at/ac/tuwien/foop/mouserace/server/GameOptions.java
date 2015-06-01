@@ -1,19 +1,19 @@
 package at.ac.tuwien.foop.mouserace.server;
 
 public class GameOptions {
-	private int tickSeconds = 3;
+	private int tickMillis = 1000;
 	private int sniffingTime = 5;
-	private int confusedTime = 3;
+	private int confusedTime = 7;
 
 	public GameOptions() {
 	}
 
-	public int getTickSeconds() {
-		return tickSeconds;
+	public int getTickMillis() {
+		return tickMillis;
 	}
 
-	public void setTickSeconds(int tickSeconds) {
-		this.tickSeconds = tickSeconds;
+	public void setTickMillis(int tickMillis) {
+		this.tickMillis = tickMillis;
 	}
 
 	public int getSniffingTime() {
