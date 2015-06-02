@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import at.ac.tuwien.foop.mouserace.common.domain.Cell;
@@ -22,6 +23,8 @@ import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
 import at.ac.tuwien.foop.mouserace.common.domain.MouseState;
 import at.ac.tuwien.foop.mouserace.common.domain.Wind;
 import at.ac.tuwien.foop.mouserace.server.utils.Tuple;
+
+
 
 public class GameEngine {
 
@@ -37,6 +40,9 @@ public class GameEngine {
 
 	// for each mouse: how many ticks will it keep being confused
 	private Map<Mouse, Integer> confusedMice;
+
+
+	private final Logger logger = Logger.getLogger(GameEngine.class.getSimpleName());
 
 
 	public GameEngine(Game game, GameOptions options) {
@@ -64,7 +70,7 @@ public class GameEngine {
 	}
 
 	private void printFigureWithPosition(Figure f) {
-		System.out.println(String.format("%s %d: Position (%d/%d)",
+		logger.info(String.format("%s %d: Position (%d/%d)",
 				f.getClass().getSimpleName(),
 				f.getId(),
 				f.getX(),
@@ -89,7 +95,7 @@ public class GameEngine {
 	 *  back to its players
 	 */
 	public void play() {
-		System.out.println("Tick!");
+		logger.info("Tick!");
 
 		// TODO receive key presses from players
 		List<Direction> directions = Arrays.asList(Direction.UP, Direction.UP, Direction.LEFT,
@@ -128,7 +134,8 @@ public class GameEngine {
 
 	private void endGame(Mouse winner) {
 		tick.cancel();
-		System.out.println(String.format("Game over! Mouse %d wins!", winner.getId()));
+		logger.info(String.format("Game over! Mouse %d wins!", winner.getId()));
+
 	}
 
 	private void moveMouse(Mouse m) {
@@ -142,11 +149,11 @@ public class GameEngine {
 
 			if(remainingTicks == 0) {
 				m.setState(MouseState.CONFUSED);
-				System.out.println(String.format("  Mouse %d: Stopped sniffing. Gonna move randomly now.", m.getId()));
+				logger.info(String.format("  Mouse %d: Stopped sniffing. Gonna move randomly now.", m.getId()));
 				confusedMice.put(m,  options.getConfusedTime());
 			} else {
 				sniffingMice.put(m,  remainingTicks-1);
-				System.out.println(String.format("  Mouse %d: Gonna keep sniffing for %s more ticks.", m.getId(), remainingTicks-1));
+				logger.info(String.format("  Mouse %d: Gonna keep sniffing for %s more ticks.", m.getId(), remainingTicks-1));
 			}
 		}
 
@@ -155,10 +162,10 @@ public class GameEngine {
 
 			if(remainingTicks == 0) {
 				m.setState(MouseState.NORMAL);
-				System.out.println(String.format("  Mouse %d: Back to normal.", m.getId()));
+				logger.info(String.format("  Mouse %d: Back to normal.", m.getId()));
 			} else {
 				confusedMice.put(m,  remainingTicks-1);
-				System.out.println(String.format("  Mouse %d: Gonna keep moving aimlessly for %s more ticks.", m.getId(), remainingTicks-1));
+				logger.info(String.format("  Mouse %d: Gonna keep moving aimlessly for %s more ticks.", m.getId(), remainingTicks-1));
 
 				Random r = new Random();
 
@@ -166,7 +173,7 @@ public class GameEngine {
 				newX = nextCell.getX();
 				newY = nextCell.getY();
 
-				System.out.println(String.format("  Mouse %d: Moving from (%d,%d) to (%d,%d)",
+				logger.info(String.format("  Mouse %d: Moving from (%d,%d) to (%d,%d)",
 						m.getId(), m.getX(), m.getY(), newX, newY));
 
 				m.setX(nextCell.getX());
@@ -181,14 +188,14 @@ public class GameEngine {
 				newX = nextCell.get().getX();
 				newY = nextCell.get().getY();
 
-				System.out.println(String.format("  Mouse %d: Moving from (%d,%d) to (%d,%d)",
+				logger.info(String.format("  Mouse %d: Moving from (%d,%d) to (%d,%d)",
 						m.getId(), m.getX(), m.getY(), newX, newY));
 
 				m.setX(newX);
 				m.setY(newY);
 
 			} else {
-				System.out.println(String.format("  Mouse %d: No idea where to go.", m.getId()));
+				logger.info(String.format("  Mouse %d: No idea where to go.", m.getId()));
 				m.setState(MouseState.CONFUSED);
 				confusedMice.put(m, options.getConfusedTime());
 			}
@@ -200,7 +207,7 @@ public class GameEngine {
 			m.setState(MouseState.SNIFFING);
 			sniffingMice.put(m, options.getSniffingTime());
 
-			System.out.println(String.format("  Mouse %d: Encountered another mouse. *sniff*", m.getId()));
+			logger.info(String.format("  Mouse %d: Encountered another mouse. *sniff*", m.getId()));
 		}
 	}
 
@@ -245,7 +252,7 @@ public class GameEngine {
 		int newX = moveCoordinate(cheese.getX(), game.getField().getWidth(), relativeSpeedX);
 		int newY = moveCoordinate(cheese.getY(), game.getField().getHeight(), relativeSpeedY);
 
-		System.out.println(String.format("The Wind makes it seem like the cheese is actually at (%d/%d)", newX, newY));
+		logger.info(String.format("  The Wind makes it seem like the cheese is actually at (%d/%d)", newX, newY));
 
 		return game.getField().getCell(newX, newY);
 	}
