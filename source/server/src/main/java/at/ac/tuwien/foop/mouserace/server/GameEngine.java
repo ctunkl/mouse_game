@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import at.ac.tuwien.foop.mouserace.common.domain.Cell;
 import at.ac.tuwien.foop.mouserace.common.domain.Cheese;
 import at.ac.tuwien.foop.mouserace.common.domain.EmptyCell;
+import at.ac.tuwien.foop.mouserace.common.domain.Field;
 import at.ac.tuwien.foop.mouserace.common.domain.Figure;
 import at.ac.tuwien.foop.mouserace.common.domain.Game;
 import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
@@ -94,12 +95,13 @@ public class GameEngine {
 		}, 0, options.getTickMillis());
 	}
 
+
 	/**
 	 * 	This method is called on each tick. It processes the player input,
 	 *  moves the mice and updates their state, and finally sends the game state
 	 *  back to its players
 	 */
-	public void play() {
+	private void play() {
 		logger.info("Tick!");
 
 		// TODO receive key presses from players
@@ -113,7 +115,7 @@ public class GameEngine {
 			moveMouse(m);
 			checkForCollisions();
 
-			if(hasReachedCheese(m)) {
+			if(hasReachedCheese(m, this.cheese)) {
 				endGame(m);
 				return;
 			}
@@ -135,8 +137,8 @@ public class GameEngine {
 		}
 	}
 
-	private boolean hasReachedCheese(Mouse m) {
-		return m.getX() == this.cheese.getX() && m.getY() == this.cheese.getY();
+	private boolean hasReachedCheese(Mouse m, Cheese cheese) {
+		return m.getX() == cheese.getX() && m.getY() == cheese.getY();
 	}
 
 	private void endGame(Mouse winner) {
@@ -147,7 +149,7 @@ public class GameEngine {
 	}
 
 	private void moveMouse(Mouse m) {
-		List<Cell> emptyNeighbours = emptyNeighbours(m.getX(), m.getY());
+		List<Cell> emptyNeighbours = emptyNeighbours(game.getField(), m.getX(), m.getY());
 
 		Integer newX = m.getX();
 		Integer newY = m.getY();
@@ -190,7 +192,7 @@ public class GameEngine {
 		}
 
 		if(m.getState().equals(MouseState.NORMAL)) {
-			Optional<Cell> nextCell = nextCell(m.getX(), m.getY());
+			Optional<Cell> nextCell = nextCell(game.getField(), game.getWind(), m.getX(), m.getY());
 
 			if(nextCell.isPresent()) {
 				newX = nextCell.get().getX();
@@ -223,8 +225,8 @@ public class GameEngine {
 	 * For given coordinates, returns all empty neighbour cells which lead
 	 * closer to a given cell
 	 */
-	public List<Cell> neighboursLeadingToCell(int x, int y, Cell cell) {
-		List<Cell> cells = emptyNeighbours(x, y);
+	private List<Cell> neighboursLeadingToCell(Field field, int x, int y, Cell cell) {
+		List<Cell> cells = emptyNeighbours(field, x, y);
 
 		Integer currentDistance = manhattanDistance(x, y, cell.getX(), cell.getY());
 
@@ -233,14 +235,15 @@ public class GameEngine {
 				.collect(Collectors.toList());
 	}
 
+
 	/**
 	 * For given coordinates, return the best move.
 	 * Currently: Picks any cell which leads closer to the cheese
 	 */
-	public Optional<Cell> nextCell(int x, int y) {
-		Cell target = calculateTargetCell(game.getWind(), cheese);
+	private Optional<Cell> nextCell(Field field, Wind wind, int x, int y) {
+		Cell target = calculateTargetCell(field, wind, cheese);
 
-		List<Cell> cells = neighboursLeadingToCell(x, y, target);
+		List<Cell> cells = neighboursLeadingToCell(field, x, y, target);
 
 		if(cells.isEmpty()) {
 			return Optional.empty();
@@ -253,16 +256,18 @@ public class GameEngine {
 	 * Uses the wind to determine a new target cell for the mice,
 	 * relative to the cheese
 	 */
-	private Cell calculateTargetCell(Wind wind, Cheese cheese) {
+	private Cell calculateTargetCell(Field field, Wind wind, Cheese cheese) {
 		double relativeSpeedX = (double)wind.getSpeedX()/Wind.MAX_WIND;
 		double relativeSpeedY = (double)wind.getSpeedY()/Wind.MAX_WIND;
 
-		int newX = moveCoordinate(cheese.getX(), game.getField().getWidth(), relativeSpeedX);
-		int newY = moveCoordinate(cheese.getY(), game.getField().getHeight(), relativeSpeedY);
+		int newX = moveCoordinate(cheese.getX(), field.getWidth(), relativeSpeedX);
+		int newY = moveCoordinate(cheese.getY(), field.getHeight(), relativeSpeedY);
 
-		logger.info(String.format("  The Wind makes it seem like the cheese is actually at (%d/%d)", newX, newY));
+		if(newX != cheese.getX() || newY != cheese.getY()) {
+			logger.info(String.format("  The Wind makes it seem like the cheese is actually at (%d/%d)", newX, newY));
+		}
 
-		return game.getField().getCell(newX, newY);
+		return field.getCell(newX, newY);
 	}
 
 	/**
@@ -294,17 +299,19 @@ public class GameEngine {
 		return Math.abs(x1 - x2) + Math.abs(y1 - y2);
 	}
 
+
 	/**
 	 * For given coordinates, return all empty neighbour cells
 	 */
-	public List<Cell> emptyNeighbours(int x, int y) {
-		return neighbourCells(x, y).stream().filter(c -> c instanceof EmptyCell).collect(Collectors.toList());
+	private List<Cell> emptyNeighbours(Field field, int x, int y) {
+		return neighbourCells(field, x, y).stream().filter(c -> c instanceof EmptyCell).collect(Collectors.toList());
 	}
+
 
 	/**
 	 * For given coordinates, return all direct neighbour cells within the field
 	 */
-	public List<Cell> neighbourCells(int x, int y) {
+	private List<Cell> neighbourCells(Field field, int x, int y) {
 		List<Cell> cells = new ArrayList<>();
 
 		List<Tuple<Integer, Integer>> coords = new ArrayList<>();
@@ -315,7 +322,7 @@ public class GameEngine {
 
 		for(Tuple<Integer, Integer> tuple : coords) {
 			try {
-				cells.add(game.getField().getCell(tuple.left, tuple.right));
+				cells.add(field.getCell(tuple.left, tuple.right));
 			} catch(IllegalArgumentException e) {}
 		}
 
@@ -323,10 +330,11 @@ public class GameEngine {
 	}
 
 
+
 	/**
 	 *  Calculate new wind based on player input
 	 */
-	public Wind calculateWind(Wind wind, Collection<Direction> directions) {
+	private Wind calculateWind(Wind wind, Collection<Direction> directions) {
 		// count how many players voted for each direction
 		Map<Direction, Long> counted = directions.stream().collect(
 				Collectors.groupingBy(o -> o, Collectors.counting()));
