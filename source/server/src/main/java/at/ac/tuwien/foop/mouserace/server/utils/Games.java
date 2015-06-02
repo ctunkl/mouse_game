@@ -4,7 +4,7 @@ import at.ac.tuwien.foop.mouserace.common.domain.Game;
 
 public class Games {
 
-	public static Game createWithSimpleField(int mice) {
+	public static Game createWithSimpleField() {
 		GameGenerator gen = new GameGenerator();
 		gen.reset();
 
@@ -16,10 +16,10 @@ public class Games {
 		gen.row("x .    . x");
 		gen.row("xxxxx.xxxx");
 
-		return gen.build(mice);
+		return gen.build();
 	}
 
-	public static Game createWithComplexField(int mice) {
+	public static Game createWithComplexField() {
 		GameGenerator gen = new GameGenerator();
 		gen.reset();
 
@@ -36,6 +36,6 @@ public class Games {
 		gen.row("x .      xx     .             xx");
 		gen.row("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
 
-		return gen.build(mice);
+		return gen.build();
 	}
 }

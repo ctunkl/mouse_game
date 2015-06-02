@@ -3,10 +3,10 @@ package at.ac.tuwien.foop.mouserace.server;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Timer;
@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import at.ac.tuwien.foop.mouserace.common.domain.Cell;
 import at.ac.tuwien.foop.mouserace.common.domain.Cheese;
 import at.ac.tuwien.foop.mouserace.common.domain.EmptyCell;
+import at.ac.tuwien.foop.mouserace.common.domain.EntryCell;
 import at.ac.tuwien.foop.mouserace.common.domain.Field;
 import at.ac.tuwien.foop.mouserace.common.domain.Figure;
 import at.ac.tuwien.foop.mouserace.common.domain.Game;
@@ -33,8 +34,10 @@ public class GameEngine {
 
 	private Game game;
 	private GameOptions options;
-	private List<Mouse> mice;
 	private Cheese cheese;
+
+	private Collection<Mouse> mice;
+	private List<Cell> freeEntryCells;
 
 	// for each mouse: how many ticks will it keep sniffing
 	private Map<Mouse, Integer> sniffingMice;
@@ -42,7 +45,12 @@ public class GameEngine {
 	// for each mouse: how many ticks will it keep being confused
 	private Map<Mouse, Integer> confusedMice;
 
+	// player for each mouse
+	private Map<Mouse, GameStateListener> playersForMice;
+
+
 	private List<GameStateListener> listeners;
+
 
 	private final Logger logger = Logger.getLogger(GameEngine.class.getSimpleName());
 
@@ -53,22 +61,18 @@ public class GameEngine {
 
 		sniffingMice = new HashMap<>();
 		confusedMice = new HashMap<>();
+		playersForMice = new HashMap<>();
 
-		// extract mice and cheese from Figure list for convenience
-		mice = new ArrayList<>();
+		Optional<Figure> optCheese = game.getFigures().stream().filter(f -> f instanceof Cheese).findFirst();
 
-		for(Figure f : game.getFigures()) {
-			if(f instanceof Mouse) {
-				mice.add((Mouse) f);
-			}
-			if(f instanceof Cheese) {
-				this.cheese = (Cheese) f;
-			}
-
-			printFigureWithPosition(f);
+		if(optCheese.isPresent() == false) {
+			throw new IllegalArgumentException("No cheese in game field");
 		}
 
-		Objects.requireNonNull(cheese, "No cheese found");
+		this.cheese = (Cheese) optCheese.get();
+		printFigureWithPosition(this.cheese);
+
+		freeEntryCells = findCellsOfType(game.getField(), EntryCell.class);
 
 		this.listeners = new ArrayList<>();
 	}
@@ -81,7 +85,32 @@ public class GameEngine {
 				f.getY()));
 	}
 
+	private <T extends Cell> List<Cell> findCellsOfType(Field field, Class<T> clazz) {
+		List<Cell> cells = new ArrayList<>();
+
+		for(int y=0; y < field.getHeight(); y++) {
+			for(int x=0; x < field.getWidth(); x++) {
+				Cell cell = field.getCell(x, y);
+
+				if(cell.getClass().equals(clazz)) {
+					cells.add(cell);
+				}
+			}
+		}
+
+		return cells;
+	}
+
 	public void startGame() {
+		this.mice =  this.game.getFigures().stream()
+				.filter(f -> f instanceof Mouse)
+				.map(f -> (Mouse) f)
+				.collect(Collectors.toList());
+
+		if(mice.size() == 0) {
+			throw new IllegalStateException("No mice! Cannot start game.");
+		}
+
 		this.listeners.forEach(l -> l.fieldChosen(game.getField()));
 
 		tick = new Timer(this.getClass().getSimpleName());
@@ -143,7 +172,7 @@ public class GameEngine {
 
 	private void endGame(Mouse winner) {
 		tick.cancel();
-		logger.info(String.format("Game over! Mouse %d wins!", winner.getId()));
+		logger.info(String.format("Game over! Mouse %d (Player: %s) wins!", winner.getId(), playersForMice.get(winner)));
 
 		this.listeners.forEach(l -> l.gameEnded(winner));
 	}
@@ -356,11 +385,29 @@ public class GameEngine {
 		return wind;
 	}
 
-	public void addListener(GameStateListener listener) {
+	public void registerPlayer(GameStateListener listener) {
+		if(this.freeEntryCells.isEmpty()) {
+			throw new IllegalStateException(String.format("Game is full, no more room for more players"));
+		}
+
+		Collections.shuffle(this.freeEntryCells);
+
+		Cell entryCell = this.freeEntryCells.get(0);
+
+		Mouse mouse= new Mouse(nextFreeFigureId(this.game.getFigures()));
+		mouse.setX(entryCell.getX());
+		mouse.setY(entryCell.getY());
+
+		logger.info(String.format("Registering new player %s: Assigned mouse: %d: ", listener.toString(), mouse.getId()));
+		logger.info(String.format("Mouse %d will start from (%d/%d)", mouse.getId(), mouse.getX(), mouse.getY()));
+
 		this.listeners.add(listener);
+		this.playersForMice.put(mouse, listener);
+		this.game.getFigures().add(mouse);
+		this.freeEntryCells.remove(entryCell);
 	}
 
-	public void setListeners(List<GameStateListener> listeners) {
-		this.listeners = listeners;
+	private int nextFreeFigureId(Collection<Figure> figures) {
+		return figures.stream().map(f -> f.getId()).max(Integer::max).orElse(0) + 1;
 	}
 }

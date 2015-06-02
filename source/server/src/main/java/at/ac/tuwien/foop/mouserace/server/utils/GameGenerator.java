@@ -1,7 +1,6 @@
 package at.ac.tuwien.foop.mouserace.server.utils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,7 +12,6 @@ import at.ac.tuwien.foop.mouserace.common.domain.EntryCell;
 import at.ac.tuwien.foop.mouserace.common.domain.Field;
 import at.ac.tuwien.foop.mouserace.common.domain.Figure;
 import at.ac.tuwien.foop.mouserace.common.domain.Game;
-import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
 import at.ac.tuwien.foop.mouserace.common.domain.WallCell;
 import at.ac.tuwien.foop.mouserace.common.domain.Wind;
 
@@ -21,8 +19,6 @@ public class GameGenerator {
 
 	private List<String> rows;
 	private int width;
-
-	private List<Cell> entryCells;
 
 	private int nextId;
 
@@ -33,7 +29,6 @@ public class GameGenerator {
 
 	public void reset() {
 		rows = new ArrayList<>();
-		entryCells = new ArrayList<>();
 		nextId = 0;
 	}
 
@@ -53,7 +48,7 @@ public class GameGenerator {
 		return row.matches("[ xc.]+") && row.length() == width;
 	}
 
-	public Game build(int mice) {
+	public Game build() {
 		if(rows.isEmpty()) {
 			throw new IllegalArgumentException("Found no field data");
 		}
@@ -72,10 +67,6 @@ public class GameGenerator {
 				Cell cell = cellForCharacter(row.charAt(x));
 				field.setCell(x, y, cell);
 
-				if(cell instanceof EntryCell) {
-					entryCells.add(cell);
-				}
-
 				Figure f = figureForCharacter(row.charAt(x));
 				if(f != null) {
 					f.setX(x);
@@ -83,25 +74,6 @@ public class GameGenerator {
 					figures.add(f);
 				}
 			}
-		}
-
-		if(mice > entryCells.size()) {
-			throw new IllegalArgumentException(String.format("Only %d mice are allowed on this field",
-					entryCells.size()));
-		}
-
-
-		// add mice, put them on entry cells
-		Collections.shuffle(this.entryCells);
-
-		for(int i = 0; i < mice; i++) {
-			Cell entryCell = this.entryCells.get(i);
-
-			Mouse mouse= new Mouse(nextId());
-			mouse.setX(entryCell.getX());
-			mouse.setY(entryCell.getY());
-
-			figures.add(mouse);
 		}
 
 		Game game = new Game();

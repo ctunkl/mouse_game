@@ -7,4 +7,6 @@ public interface GameStateListener {
 	public void fieldChosen(Field field);
 	public void currentState(GameState state);
 	public void gameEnded(Mouse winner);
+
+	public String getId();
 }
