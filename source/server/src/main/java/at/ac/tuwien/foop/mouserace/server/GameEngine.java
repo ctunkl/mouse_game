@@ -41,6 +41,7 @@ public class GameEngine {
 	// for each mouse: how many ticks will it keep being confused
 	private Map<Mouse, Integer> confusedMice;
 
+	private List<GameStateListener> listeners;
 
 	private final Logger logger = Logger.getLogger(GameEngine.class.getSimpleName());
 
@@ -67,6 +68,8 @@ public class GameEngine {
 		}
 
 		Objects.requireNonNull(cheese, "No cheese found");
+
+		this.listeners = new ArrayList<>();
 	}
 
 	private void printFigureWithPosition(Figure f) {
@@ -78,6 +81,8 @@ public class GameEngine {
 	}
 
 	public void startGame() {
+		this.listeners.forEach(l -> l.fieldChosen(game.getField()));
+
 		tick = new Timer(this.getClass().getSimpleName());
 		tick.schedule(new TimerTask() {
 
@@ -113,6 +118,8 @@ public class GameEngine {
 				return;
 			}
 		}
+
+		this.listeners.forEach(l -> l.currentState(new GameState(game.getFigures(), game.getWind())));
 	}
 
 	private void checkForCollisions() {
@@ -136,6 +143,7 @@ public class GameEngine {
 		tick.cancel();
 		logger.info(String.format("Game over! Mouse %d wins!", winner.getId()));
 
+		this.listeners.forEach(l -> l.gameEnded(winner));
 	}
 
 	private void moveMouse(Mouse m) {
@@ -338,5 +346,13 @@ public class GameEngine {
 		newWind.setSpeedY((byte) speedY);
 
 		return wind;
+	}
+
+	public void addListener(GameStateListener listener) {
+		this.listeners.add(listener);
+	}
+
+	public void setListeners(List<GameStateListener> listeners) {
+		this.listeners = listeners;
 	}
 }
