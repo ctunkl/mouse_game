@@ -1,12 +1,14 @@
 package at.ac.tuwien.foop.mouserace.common.domain;
 
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /**
  * Created by klaus on 5/30/15.
  */
-public class Field {
+public class Field implements Iterable<Cell> {
 	public static final int MIN_SIZE = 3;
 
 	private final Cell[][] cells;
@@ -104,5 +106,144 @@ public class Field {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Same as {@link #columnFirstIterator()}
+	 * @see #columnFirstIterator()
+	 */
+	@Override
+	public Iterator<Cell> iterator() {
+		return columnFirstIterator();
+	}
+
+	/**
+	 * <p>
+	 * Iterate over all cells of the field by first column and then row. I.e. the positions of the cells will be in
+	 * the following order: (0,0), (1,0), (2,0), ..., (0,1), (1,1), (2,1), ... <br/>
+	 * where the first value of each tuple is the column (= x) and the second value is the row (= y).
+	 * </p><p>
+	 * <strong>This iterator will be read-only, so the {@link Iterator#remove()} method will not be supported and
+	 * throw an {@linkplain UnsupportedOperationException}. Furthermore, modification </strong>
+	 * </p><p>
+	 * For iterating over the field with row first, see {@link #rowFirstIterator()}
+	 * </p>
+	 */
+	public Iterator<Cell> columnFirstIterator() {
+		return new ColumnFirstIterator();
+	}
+
+	/**
+	 * <p>
+	 * Iterate over all cells of the field by first row and then column. I.e. the positions of the cells will be in
+	 * the following order: (0,0), (0,1), (0,2), ..., (1,0), (1,1), (1,2), ... <br/>
+	 * where the first value of each tuple is the column (= x) and the second value is the row (= y).
+	 * </p><p>
+	 * <strong>This iterator will be read-only, so the {@link Iterator#remove()} method will not be supported and
+	 * throw an {@linkplain UnsupportedOperationException}.</strong>
+	 * </p><p>
+	 * For iterating over the field with column first, see {@link #columnFirstIterator()}
+	 * </p>
+	 */
+	public Iterator<Cell> rowFirstIterator() {
+		return new RowFirstIterator();
+	}
+
+	/**
+	 * <p>
+	 * Iterate over the rows of the field. The columns of each row can be accessed through the index of the array
+	 * returned by the iterator.
+	 * </p><p>
+	 * <strong>This iterator will be read-only, so the {@link Iterator#remove()} method will not be supported and
+	 * throw an {@linkplain UnsupportedOperationException}. Furthermore, modifications in the returned array of
+	 * the iterator will not modify this field</strong>
+	 * </p>
+	 */
+	public Iterator<Cell[]> rowIterator() {
+		return new RowIterator();
+	}
+
+	/**
+	 * <p>
+	 * Iterate over the columns of the field. The rows of each column can be accessed through the index of the array
+	 * returned by the iterator.
+	 * </p><p>
+	 * <strong>This iterator will be read-only, so the {@link Iterator#remove()} method will not be supported and
+	 * throw an {@linkplain UnsupportedOperationException}. Furthermore, modifications in the returned array of
+	 * the iterator will not modify this field</strong>
+	 * </p>
+	 */
+	public Iterator<Cell[]> columnIterator() {
+		return new ColumnIterator();
+	}
+
+	public abstract class AbstractFieldIterator<T> implements Iterator<T> {
+		protected int x, y;
+
+		public AbstractFieldIterator() {
+			x = 0;
+			y = 0;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return x < Field.this.getWidth() || y < Field.this.getHeight();
+		}
+
+		@Override
+		abstract public T next();
+	}
+
+	public class ColumnFirstIterator extends AbstractFieldIterator<Cell> {
+		@Override
+		public Cell next() {
+			if(!hasNext())
+				throw new NoSuchElementException();
+			Cell ret = Field.this.getCell(x, y);
+			if(x >= Field.this.getWidth()-1)
+				y++;
+			else
+				x++;
+			return ret;
+		}
+	}
+
+	public class RowFirstIterator extends AbstractFieldIterator<Cell> {
+		@Override
+		public Cell next() {
+			if(!hasNext())
+				throw new NoSuchElementException();
+			Cell ret = Field.this.getCell(x, y);
+			if(y >= Field.this.getHeight()-1)
+				x++;
+			else
+				y++;
+			return ret;
+		}
+	}
+
+	public class ColumnIterator extends AbstractFieldIterator<Cell[]> {
+		@Override
+		public Cell[] next() {
+			if(!hasNext())
+				throw new NoSuchElementException();
+
+			return Arrays.copyOf(cells[x++], Field.this.getHeight());
+		}
+	}
+
+	public class RowIterator extends AbstractFieldIterator<Cell[]> {
+		@Override
+		public Cell[] next() {
+			if(!hasNext())
+				throw new NoSuchElementException();
+
+			Cell[] row = new Cell[Field.this.getWidth()];
+			for (int x = 0; x < row.length; x++) {
+				row[x] = Field.this.getCell(x, y);
+			}
+			y++;
+			return row;
+		}
 	}
 }
