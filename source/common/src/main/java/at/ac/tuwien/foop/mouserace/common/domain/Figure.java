@@ -1,5 +1,7 @@
 package at.ac.tuwien.foop.mouserace.common.domain;
 
+import at.ac.tuwien.foop.mouserace.common.network.messages.FigureType;
+
 /**
  * Created by klaus on 5/30/15.
  */
@@ -31,4 +33,6 @@ public abstract class Figure {
 	public void setY(int y) {
 		this.y = y;
 	}
+
+	public abstract FigureType getFigureType();
 }

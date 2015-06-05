@@ -10,17 +10,25 @@ import java.util.Objects;
  */
 public class Field implements Iterable<Cell> {
 	public static final int MIN_SIZE = 3;
+	public static final int MAX_WIDTH = 1 << 16; // TODO (KK) Calculate from the bytecount of the WIDTH field of the READY message
+	public static final int MAX_HEIGHT = 1 << 16; // TODO (KK) Calculate from the bytecount of the HEIGHT field of the READY message
 
 	private final Cell[][] cells;
 
 	/**
 	 * Constructs a new field with specified width and height.
-	 * @param width the game field width
+	 *
+	 * @param width  the game field width
 	 * @param height the game field height
 	 */
 	public Field(int width, int height) {
-		if(width < MIN_SIZE || height < MIN_SIZE)
-			throw new IllegalArgumentException(String.format("Both width and height have to be greater than %d", MIN_SIZE));
+		if (width < MIN_SIZE || height < MIN_SIZE)
+			throw new IllegalArgumentException(
+					String.format("Both width and height have to be greater than or equal %d", MIN_SIZE));
+		if (width > MAX_WIDTH)
+			throw new IllegalArgumentException(String.format("width has to be lower than or equal %d", MAX_WIDTH));
+		if (height > MAX_HEIGHT)
+			throw new IllegalArgumentException(String.format("height has to be lower than or equal %d", MAX_HEIGHT));
 
 		cells = new Cell[width][height];
 	}
@@ -29,18 +37,18 @@ public class Field implements Iterable<Cell> {
 	 * Sets the cell on position (x, y). In addition it sets the position attributes (x, y) of the
 	 * new cell and unsets the position attributes (x, y) of the old cell.
 	 *
-	 * @param x the width index in the interval [0, width-1]
-	 * @param y the height index in the interval [0, height-1]
+	 * @param x    the width index in the interval [0, width-1]
+	 * @param y    the height index in the interval [0, height-1]
 	 * @param cell the cell which will be set on the specified position
 	 * @return the old cell at the specified position
 	 */
 	public Cell setCell(int x, int y, Cell cell) {
-		if(!checkPosition(x, y))
+		if (!checkPosition(x, y))
 			throw new IllegalArgumentException("Either x or y is out of range");
 		Objects.requireNonNull(cell, "cell must not be null");
 
 		Cell oldCell = cells[x][y];
-		if(oldCell != null) {
+		if (oldCell != null) {
 			oldCell.unsetFieldPosition();
 		}
 		cell.setFieldPosition(x, y);
@@ -50,7 +58,7 @@ public class Field implements Iterable<Cell> {
 	}
 
 	public Cell getCell(int x, int y) {
-		if(!checkPosition(x, y))
+		if (!checkPosition(x, y))
 			throw new IllegalArgumentException("Either x or y is out of range");
 
 		return cells[x][y];
@@ -58,6 +66,7 @@ public class Field implements Iterable<Cell> {
 
 	/**
 	 * Checks whether the position indexed by x and y is in the range of the field.
+	 *
 	 * @param x the width index in the interval [0, width-1]
 	 * @param y the height index in the interval [0, height-1]
 	 * @return true, if and only if x and y are valid indices in the field.
@@ -71,7 +80,7 @@ public class Field implements Iterable<Cell> {
 	}
 
 	public int getHeight() {
-		if(cells[0] == null)
+		if (cells[0] == null)
 			throw new IllegalStateException("The game field is not a valid two dimensional field");
 
 		return cells[0].length;
@@ -83,6 +92,7 @@ public class Field implements Iterable<Cell> {
 
 	/**
 	 * Checks if the field is a valid game field and the cells are all placed correctly.
+	 *
 	 * @return True, if and only if the field is valid.
 	 */
 	public boolean isFieldValid() {
@@ -90,14 +100,14 @@ public class Field implements Iterable<Cell> {
 			for (int y = 0; y < getHeight(); y++) {
 				final Cell cell = getCell(x, y);
 
-				if(cell == null)
+				if (cell == null)
 					return false;
 
 				// Check if edge cells are either entry cells or wall cells
-				if(x == 0 || x >= getWidth()-1 || y == 0 || y >= getHeight()-1) {
+				if (x == 0 || x >= getWidth() - 1 || y == 0 || y >= getHeight() - 1) {
 					// We're somewhere on the edge
 
-					if(!(cell instanceof EntryCell || cell instanceof WallCell))
+					if (!(cell instanceof EntryCell || cell instanceof WallCell))
 						return false;
 				}
 
@@ -110,6 +120,7 @@ public class Field implements Iterable<Cell> {
 
 	/**
 	 * Same as {@link #columnFirstIterator()}
+	 *
 	 * @see #columnFirstIterator()
 	 */
 	@Override
@@ -197,10 +208,10 @@ public class Field implements Iterable<Cell> {
 	public class ColumnFirstIterator extends AbstractFieldIterator<Cell> {
 		@Override
 		public Cell next() {
-			if(!hasNext())
+			if (!hasNext())
 				throw new NoSuchElementException();
 			Cell ret = Field.this.getCell(x, y);
-			if(x >= Field.this.getWidth()-1)
+			if (x >= Field.this.getWidth() - 1)
 				y++;
 			else
 				x++;
@@ -211,10 +222,10 @@ public class Field implements Iterable<Cell> {
 	public class RowFirstIterator extends AbstractFieldIterator<Cell> {
 		@Override
 		public Cell next() {
-			if(!hasNext())
+			if (!hasNext())
 				throw new NoSuchElementException();
 			Cell ret = Field.this.getCell(x, y);
-			if(y >= Field.this.getHeight()-1)
+			if (y >= Field.this.getHeight() - 1)
 				x++;
 			else
 				y++;
@@ -225,7 +236,7 @@ public class Field implements Iterable<Cell> {
 	public class ColumnIterator extends AbstractFieldIterator<Cell[]> {
 		@Override
 		public Cell[] next() {
-			if(!hasNext())
+			if (!hasNext())
 				throw new NoSuchElementException();
 
 			return Arrays.copyOf(cells[x++], Field.this.getHeight());
@@ -235,7 +246,7 @@ public class Field implements Iterable<Cell> {
 	public class RowIterator extends AbstractFieldIterator<Cell[]> {
 		@Override
 		public Cell[] next() {
-			if(!hasNext())
+			if (!hasNext())
 				throw new NoSuchElementException();
 
 			Cell[] row = new Cell[Field.this.getWidth()];

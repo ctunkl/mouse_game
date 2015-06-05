@@ -20,7 +20,7 @@ public class Wind {
 	}
 
 	public void setSpeedX(byte speedX) {
-		if(speedX < MIN_WIND || speedX > MAX_WIND)
+		if (speedX < MIN_WIND || speedX > MAX_WIND)
 			throw new IllegalArgumentException(String.format("Specified speed is out of range [%d, %d]", MIN_WIND, MAX_WIND));
 
 		this.speedX = speedX;
@@ -31,7 +31,7 @@ public class Wind {
 	}
 
 	public void setSpeedY(byte speedY) {
-		if(speedY < MIN_WIND || speedY > MAX_WIND)
+		if (speedY < MIN_WIND || speedY > MAX_WIND)
 			throw new IllegalArgumentException(String.format("Specified speed is out of range [%d, %d]", MIN_WIND, MAX_WIND));
 
 		this.speedY = speedY;
