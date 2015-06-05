@@ -1,5 +1,7 @@
 package at.ac.tuwien.foop.mouserace.common.network.messages;
 
+import at.ac.tuwien.foop.mouserace.common.domain.Figure;
+import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
 import at.ac.tuwien.foop.mouserace.common.network.exceptions.MessageParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,19 +13,19 @@ import java.util.Objects;
 /**
  * Created by klaus on 6/5/15.
  */
-public class UserInputMessage extends CommandMessage {
-	private static final Logger logger = LoggerFactory.getLogger(UserInputMessage.class.getName());
+public class EndMessage extends CommandMessage {
+	private static final Logger logger = LoggerFactory.getLogger(EndMessage.class.getName());
 
-	public static final int MAX_BUTTON_LENGTH = 0xFF;
-	public static final CommandType COMMAND_TYPE = CommandType.USER_INPUT;
+	public static final int MAX_MICE_LENGTH = 0xFF;
+	public static final CommandType COMMAND_TYPE = CommandType.END;
 
-	private final ButtonType[] buttons;
+	private final Mouse[] winningMice;
 
-	public UserInputMessage(ButtonType... buttons) {
-		this.buttons = Objects.requireNonNull(buttons);
+	public EndMessage(Mouse... winningMice) {
+		this.winningMice = Objects.requireNonNull(winningMice);
 
-		if (buttons.length > MAX_BUTTON_LENGTH)
-			throw new IllegalArgumentException(String.format("no more than %d buttons allowed", MAX_BUTTON_LENGTH));
+		if (winningMice.length > MAX_MICE_LENGTH)
+			throw new IllegalArgumentException(String.format("no more than %d winningMice allowed", MAX_MICE_LENGTH));
 	}
 
 	/**
@@ -32,7 +34,7 @@ public class UserInputMessage extends CommandMessage {
 	 * @return a new instance of this class
 	 * @throws EOFException if the input provided is shorter than the expected length
 	 */
-	public static UserInputMessage fromByteArray(byte[] data) throws EOFException, MessageParsingException {
+	public static EndMessage fromByteArray(byte[] data) throws EOFException, MessageParsingException {
 		Objects.requireNonNull(data);
 
 		try {
@@ -52,7 +54,7 @@ public class UserInputMessage extends CommandMessage {
 	 *                                 protocol specification
 	 * @throws EOFException            if the input provided is shorter than the expected length
 	 */
-	public static UserInputMessage fromInputStream(DataInput input) throws MessageParsingException, IOException {
+	public static EndMessage fromInputStream(DataInput input) throws MessageParsingException, IOException {
 		Objects.requireNonNull(input);
 
 		byte commandType = input.readByte();
@@ -62,37 +64,37 @@ public class UserInputMessage extends CommandMessage {
 							COMMAND_TYPE.getValue(), commandType));
 
 		int length = input.readUnsignedByte();
-		byte[] buttonsBytes = new byte[length];
-		input.readFully(buttonsBytes);
+		byte[] winningMiceBytes = new byte[length];
+		input.readFully(winningMiceBytes);
 
-		ButtonType[] buttons = new ButtonType[length];
+		Mouse[] winningMice = new Mouse[length];
 
 		// Convert the bytes to the enumeration
-		for (int i = 0; i < buttonsBytes.length; i++) {
+		for (int i = 0; i < winningMiceBytes.length; i++) {
 			try {
-				buttons[i] = ButtonType.fromByte(buttonsBytes[i]);
+				winningMice[i] = new Mouse(Byte.toUnsignedInt(winningMiceBytes[i]));
 			} catch (IllegalArgumentException e) {
 				throw new MessageParsingException(e);
 			}
 		}
 
-		return new UserInputMessage(buttons);
+		return new EndMessage(winningMice);
 	}
 
-	public ButtonType[] getButtons() {
-		return buttons;
+	public Mouse[] getWinningMice() {
+		return winningMice;
 	}
 
 	@Override
 	public byte[] toByteArray() {
 
-		ByteBuffer bb = ByteBuffer.allocate(1 /* CMD */ + 1 /* LEN */ + buttons.length);
+		ByteBuffer bb = ByteBuffer.allocate(1 /* CMD */ + 1 /* LEN */ + winningMice.length);
 
 		bb.put(getCommandType().getValue());
-		bb.put((byte) buttons.length);
+		bb.put((byte) winningMice.length);
 
-		for (ButtonType m : buttons) {
-			bb.put(m.getValue());
+		for (Mouse m : winningMice) {
+			bb.put((byte)m.getId());
 		}
 
 		return bb.array();
