@@ -53,7 +53,7 @@ project(':client') {
 
 	apply plugin: 'application'
 
-	mainClassName = group + '.client.Main'
+	mainClassName = group + '.client.MouseRace'
 
 	dependencies {
 		compile project(':common')
