@@ -1,7 +1,7 @@
 package at.ac.tuwien.foop.mouserace.common.network.messages;
 
-import at.ac.tuwien.foop.mouserace.common.domain.Figure;
 import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
+import at.ac.tuwien.foop.mouserace.common.domain.Wind;
 import at.ac.tuwien.foop.mouserace.common.network.exceptions.MessageParsingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,18 +13,21 @@ import java.util.Objects;
 /**
  * Created by klaus on 6/5/15.
  */
-public class EndMessage extends CommandMessage {
-	private static final Logger logger = LoggerFactory.getLogger(EndMessage.class.getName());
+public class GameStateMessage extends CommandMessage {
+	private static final Logger logger = LoggerFactory.getLogger(GameStateMessage.class.getName());
 
-	public static final CommandType COMMAND_TYPE = CommandType.END;
+	public static final CommandType COMMAND_TYPE = CommandType.GAME_STATE;
 
-	private final Mouse[] winningMice;
+	private final Mouse[] mice;
+	private final Wind wind;
 
-	public EndMessage(Mouse... winningMice) {
-		this.winningMice = Objects.requireNonNull(winningMice);
+	public GameStateMessage(Wind wind, Mouse... mice) {
+		this.mice = Objects.requireNonNull(mice);
 
-		if (winningMice.length > NetworkLimits.END_MAX_MICE_LENGTH)
-			throw new IllegalArgumentException(String.format("no more than %d winningMice allowed", NetworkLimits.END_MAX_MICE_LENGTH));
+		if (mice.length > NetworkLimits.GAME_STATE_MAX_MICE_LENGTH)
+			throw new IllegalArgumentException(String.format("no more than %d mice allowed", NetworkLimits.GAME_STATE_MAX_MICE_LENGTH));
+
+		this.wind = Objects.requireNonNull(wind);
 	}
 
 	/**
@@ -33,7 +36,7 @@ public class EndMessage extends CommandMessage {
 	 * @return a new instance of this class
 	 * @throws EOFException if the input provided is shorter than the expected length
 	 */
-	public static EndMessage fromByteArray(byte[] data) throws EOFException, MessageParsingException {
+	public static GameStateMessage fromByteArray(byte[] data) throws EOFException, MessageParsingException {
 		Objects.requireNonNull(data);
 
 		try {
@@ -53,7 +56,7 @@ public class EndMessage extends CommandMessage {
 	 *                                 protocol specification
 	 * @throws EOFException            if the input provided is shorter than the expected length
 	 */
-	public static EndMessage fromInputStream(DataInput input) throws MessageParsingException, IOException {
+	public static GameStateMessage fromInputStream(DataInput input) throws MessageParsingException, IOException {
 		Objects.requireNonNull(input);
 
 		byte commandType = input.readByte();
@@ -62,39 +65,42 @@ public class EndMessage extends CommandMessage {
 					String.format("wrong command type byte: expected: 0x%02X; found: 0x%02X",
 							COMMAND_TYPE.getValue(), commandType));
 
-		int length = input.readUnsignedByte();
-		byte[] winningMiceBytes = new byte[length];
-		input.readFully(winningMiceBytes);
-
-		Mouse[] winningMice = new Mouse[length];
-
-		// Convert the bytes to the enumeration
-		for (int i = 0; i < winningMiceBytes.length; i++) {
-			try {
-				winningMice[i] = new Mouse(Byte.toUnsignedInt(winningMiceBytes[i]));
-			} catch (IllegalArgumentException e) {
-				throw new MessageParsingException(e);
-			}
+		int miceLength = input.readUnsignedByte();
+		Mouse[] mice = new Mouse[miceLength];
+		for (int i = 0; i < mice.length; i++) {
+			MouseStructure ms = MouseStructure.fromInputStream(input);
+			mice[i] = ms.getMouse();
 		}
 
-		return new EndMessage(winningMice);
+		Wind wind = new Wind();
+		wind.setSpeedX(input.readByte());
+		wind.setSpeedY(input.readByte());
+
+		return new GameStateMessage(wind, mice);
 	}
 
-	public Mouse[] getWinningMice() {
-		return winningMice;
+	public Mouse[] getMice() {
+		return mice;
+	}
+
+	public Wind getWind() {
+		return wind;
 	}
 
 	@Override
 	public byte[] toByteArray() {
 
-		ByteBuffer bb = ByteBuffer.allocate(1 /* CMD */ + 1 /* LEN */ + winningMice.length);
+		ByteBuffer bb = ByteBuffer.allocate(1 /* CMD */ + 1 /* MLEN */ + mice.length * MouseStructure.STRUCTURE_LENGTH + 1 /* WINDX */ + 1 /* WINDY */);
 
 		bb.put(getCommandType().getValue());
-		bb.put((byte) winningMice.length);
+		bb.put((byte) mice.length);
 
-		for (Mouse m : winningMice) {
-			bb.put((byte)m.getId());
+		for (Mouse m : mice) {
+			bb.put(new MouseStructure(m).toByteArray());
 		}
+
+		bb.put(wind.getSpeedX());
+		bb.put(wind.getSpeedY());
 
 		return bb.array();
 	}

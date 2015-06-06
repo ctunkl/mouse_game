@@ -14,7 +14,6 @@ import java.util.Objects;
 public class UserInputMessage extends CommandMessage {
 	private static final Logger logger = LoggerFactory.getLogger(UserInputMessage.class.getName());
 
-	public static final int MAX_BUTTON_LENGTH = 0xFF;
 	public static final CommandType COMMAND_TYPE = CommandType.USER_INPUT;
 
 	private final ButtonType[] buttons;
@@ -22,8 +21,8 @@ public class UserInputMessage extends CommandMessage {
 	public UserInputMessage(ButtonType... buttons) {
 		this.buttons = Objects.requireNonNull(buttons);
 
-		if (buttons.length > MAX_BUTTON_LENGTH)
-			throw new IllegalArgumentException(String.format("no more than %d buttons allowed", MAX_BUTTON_LENGTH));
+		if (buttons.length > NetworkLimits.USER_INPUT_MAX_BUTTON_LENGTH)
+			throw new IllegalArgumentException(String.format("no more than %d buttons allowed", NetworkLimits.USER_INPUT_MAX_BUTTON_LENGTH));
 	}
 
 	/**

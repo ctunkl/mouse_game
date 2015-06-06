@@ -9,10 +9,6 @@ import java.util.Objects;
  * Created by klaus on 5/30/15.
  */
 public class Field implements Iterable<Cell> {
-	public static final int MIN_SIZE = 3;
-	public static final int MAX_WIDTH = 1 << 16; // TODO (KK) Calculate from the bytecount of the WIDTH field of the READY message
-	public static final int MAX_HEIGHT = 1 << 16; // TODO (KK) Calculate from the bytecount of the HEIGHT field of the READY message
-
 	private final Cell[][] cells;
 
 	/**
@@ -22,13 +18,13 @@ public class Field implements Iterable<Cell> {
 	 * @param height the game field height
 	 */
 	public Field(int width, int height) {
-		if (width < MIN_SIZE || height < MIN_SIZE)
+		if (width < Limits.FIELD_MIN_WIDTH_HEIGHT || height <  Limits.FIELD_MIN_WIDTH_HEIGHT)
 			throw new IllegalArgumentException(
-					String.format("Both width and height have to be greater than or equal %d", MIN_SIZE));
-		if (width > MAX_WIDTH)
-			throw new IllegalArgumentException(String.format("width has to be lower than or equal %d", MAX_WIDTH));
-		if (height > MAX_HEIGHT)
-			throw new IllegalArgumentException(String.format("height has to be lower than or equal %d", MAX_HEIGHT));
+					String.format("Both width and height have to be greater than or equal %d",  Limits.FIELD_MIN_WIDTH_HEIGHT));
+		if (width > Limits.FIELD_MAX_WIDTH)
+			throw new IllegalArgumentException(String.format("width has to be lower than or equal %d", Limits.FIELD_MAX_WIDTH));
+		if (height > Limits.FIELD_MAX_HEIGHT)
+			throw new IllegalArgumentException(String.format("height has to be lower than or equal %d", Limits.FIELD_MAX_HEIGHT));
 
 		cells = new Cell[width][height];
 	}

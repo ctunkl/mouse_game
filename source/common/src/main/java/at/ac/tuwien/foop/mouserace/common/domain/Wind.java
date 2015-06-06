@@ -4,9 +4,6 @@ package at.ac.tuwien.foop.mouserace.common.domain;
  * Created by klaus on 5/30/15.
  */
 public class Wind {
-	public static final byte MIN_WIND = -5;
-	public static final byte MAX_WIND = 5;
-
 	private byte speedX;
 	private byte speedY;
 
@@ -20,8 +17,8 @@ public class Wind {
 	}
 
 	public void setSpeedX(byte speedX) {
-		if (speedX < MIN_WIND || speedX > MAX_WIND)
-			throw new IllegalArgumentException(String.format("Specified speed is out of range [%d, %d]", MIN_WIND, MAX_WIND));
+		if (speedX < Limits.WIND_MIN_SPEED || speedX > Limits.WIND_MAX_SPEED)
+			throw new IllegalArgumentException(String.format("Specified speed is out of range [%d, %d]", Limits.WIND_MIN_SPEED, Limits.WIND_MAX_SPEED));
 
 		this.speedX = speedX;
 	}
@@ -31,8 +28,8 @@ public class Wind {
 	}
 
 	public void setSpeedY(byte speedY) {
-		if (speedY < MIN_WIND || speedY > MAX_WIND)
-			throw new IllegalArgumentException(String.format("Specified speed is out of range [%d, %d]", MIN_WIND, MAX_WIND));
+		if (speedY < Limits.WIND_MIN_SPEED || speedY > Limits.WIND_MAX_SPEED)
+			throw new IllegalArgumentException(String.format("Specified speed is out of range [%d, %d]", Limits.WIND_MIN_SPEED, Limits.WIND_MAX_SPEED));
 
 		this.speedY = speedY;
 	}

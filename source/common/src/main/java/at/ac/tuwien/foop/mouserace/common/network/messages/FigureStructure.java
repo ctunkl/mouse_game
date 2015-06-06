@@ -1,5 +1,7 @@
 package at.ac.tuwien.foop.mouserace.common.network.messages;
 
+import at.ac.tuwien.foop.mouserace.common.domain.Cheese;
+import at.ac.tuwien.foop.mouserace.common.domain.Figure;
 import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
 import at.ac.tuwien.foop.mouserace.common.domain.MouseState;
 import at.ac.tuwien.foop.mouserace.common.network.exceptions.MessageParsingException;
@@ -13,18 +15,18 @@ import java.util.Objects;
 /**
  * Created by klaus on 6/5/15.
  */
-public class MouseStructure extends GameMessage {
-	private static final Logger logger = LoggerFactory.getLogger(MouseStructure.class.getName());
+public class FigureStructure extends GameMessage {
+	private static final Logger logger = LoggerFactory.getLogger(FigureStructure.class.getName());
 
 	/**
 	 * The length in bytes of the structure
 	 */
-	public static final int STRUCTURE_LENGTH = 1 /* ID */ + 1 /* TYPE */ + 2 /* X */ + 2 /* Y */ + 1 /* STATE */;
+	public static final int STRUCTURE_LENGTH = 1 /* ID */ + 1 /* TYPE */ + 2 /* X */ + 2 /* Y */;
 
-	private final Mouse mouse;
+	private final Figure figure;
 
-	public MouseStructure(Mouse mouse) {
-		this.mouse = Objects.requireNonNull(mouse);
+	public FigureStructure(Figure figure) {
+		this.figure = Objects.requireNonNull(figure);
 	}
 
 	/**
@@ -33,7 +35,7 @@ public class MouseStructure extends GameMessage {
 	 * @return a new instance of this class
 	 * @throws EOFException if the input provided is shorter than the expected length
 	 */
-	public static MouseStructure fromByteArray(byte[] data) throws EOFException, MessageParsingException {
+	public static FigureStructure fromByteArray(byte[] data) throws EOFException, MessageParsingException {
 		Objects.requireNonNull(data);
 
 		try {
@@ -53,49 +55,51 @@ public class MouseStructure extends GameMessage {
 	 *                                 protocol specification
 	 * @throws EOFException            if the input provided is shorter than the expected length
 	 */
-	public static MouseStructure fromInputStream(DataInput input) throws MessageParsingException, IOException {
+	public static FigureStructure fromInputStream(DataInput input) throws MessageParsingException, IOException {
 		Objects.requireNonNull(input);
 
 		int id = input.readUnsignedByte();
 
-		byte type = input.readByte();
-		if (type != FigureType.MOUSE.getValue())
-			throw new MessageParsingException(
-					String.format("wrong type byte: expected: 0x%02X; found: 0x%02X",
-							FigureType.MOUSE.getValue(), type));
-
-		int x = input.readUnsignedShort();
-		int y = input.readUnsignedShort();
-
-		byte stateByte = input.readByte();
-		MouseState state;
+		byte typeByte = input.readByte();
+		FigureType type;
 		try {
-			state = MouseState.fromByte(stateByte);
+			type = FigureType.fromByte(typeByte);
 		} catch (IllegalArgumentException e) {
 			throw new MessageParsingException(e);
 		}
 
-		Mouse mouse = new Mouse(id);
-		mouse.setX(x);
-		mouse.setY(y);
-		mouse.setState(state);
+		int x = input.readUnsignedShort();
+		int y = input.readUnsignedShort();
 
-		return new MouseStructure(mouse);
+		Figure figure;
+		switch (type) {
+			case MOUSE:
+				figure = new Mouse(id);
+				break;
+			case CHEESE:
+				figure = new Cheese(id);
+				break;
+			default:
+				throw new MessageParsingException(String.format("Unknown figure type %s", type.name()));
+		}
+		figure.setX(x);
+		figure.setY(y);
+
+		return new FigureStructure(figure);
 	}
 
-	public Mouse getMouse() {
-		return mouse;
+	public Figure getFigure() {
+		return figure;
 	}
 
 	@Override
 	public byte[] toByteArray() {
 		ByteBuffer bb = ByteBuffer.allocate(STRUCTURE_LENGTH);
 
-		bb.put((byte) mouse.getId());
-		bb.put(mouse.getFigureType().getValue());
-		bb.putShort((short)mouse.getX());
-		bb.putShort((short)mouse.getY());
-		bb.put(mouse.getState().getValue());
+		bb.put((byte) figure.getId());
+		bb.put(figure.getFigureType().getValue());
+		bb.putShort((short) figure.getX());
+		bb.putShort((short) figure.getY());
 
 		return bb.array();
 	}
