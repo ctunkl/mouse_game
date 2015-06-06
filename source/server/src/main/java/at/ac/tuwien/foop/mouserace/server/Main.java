@@ -10,7 +10,7 @@ import at.ac.tuwien.foop.mouserace.server.utils.Games;
 public class Main {
 	public static void main(String[] args) {
 
-		Game game = Games.createWithSimpleField(2);
+		Game game = Games.createWithSimpleField();
 		Wind wind = new Wind();
 		wind.setSpeedX((byte)4);
 		wind.setSpeedY((byte)0);
