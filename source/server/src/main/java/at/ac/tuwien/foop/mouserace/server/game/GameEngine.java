@@ -29,7 +29,6 @@ import at.ac.tuwien.foop.mouserace.server.IGameClient;
 import at.ac.tuwien.foop.mouserace.server.utils.Tuple;
 
 
-
 public class GameEngine {
 
 	private Timer tick;
