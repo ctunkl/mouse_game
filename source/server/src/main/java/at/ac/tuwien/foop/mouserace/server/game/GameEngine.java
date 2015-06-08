@@ -174,7 +174,7 @@ public class GameEngine {
 
 	private void endGame(Mouse winner) {
 		tick.cancel();
-		logger.info(String.format("Game over! Mouse %d (Player: %s) wins!", winner.getId(), playersForMice.get(winner)));
+		logger.info(String.format("Game over! Mouse %d (Player: %s) wins!", winner.getId(), playersForMice.get(winner).getId()));
 
 		this.listeners.forEach(l -> l.gameEnded(winner));
 	}
@@ -400,7 +400,7 @@ public class GameEngine {
 		mouse.setX(entryCell.getX());
 		mouse.setY(entryCell.getY());
 
-		logger.info(String.format("Registering new player %s: Assigned mouse: %d: ", listener.toString(), mouse.getId()));
+		logger.info(String.format("Registering new player %s: Assigned mouse: %d: ", listener.getId(), mouse.getId()));
 		logger.info(String.format("Mouse %d will start from (%d/%d)", mouse.getId(), mouse.getX(), mouse.getY()));
 
 		this.listeners.add(listener);
