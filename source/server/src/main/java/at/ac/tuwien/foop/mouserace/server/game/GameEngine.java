@@ -25,7 +25,7 @@ import at.ac.tuwien.foop.mouserace.common.domain.Limits;
 import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
 import at.ac.tuwien.foop.mouserace.common.domain.MouseState;
 import at.ac.tuwien.foop.mouserace.common.domain.Wind;
-import at.ac.tuwien.foop.mouserace.server.GameStateListener;
+import at.ac.tuwien.foop.mouserace.server.IGameClient;
 import at.ac.tuwien.foop.mouserace.server.utils.Tuple;
 
 
@@ -48,10 +48,10 @@ public class GameEngine {
 	private Map<Mouse, Integer> confusedMice;
 
 	// player for each mouse
-	private Map<Mouse, GameStateListener> playersForMice;
+	private Map<Mouse, IGameClient> playersForMice;
 
 
-	private List<GameStateListener> listeners;
+	private List<IGameClient> listeners;
 
 
 	private final Logger logger = Logger.getLogger(GameEngine.class.getSimpleName());
@@ -387,7 +387,7 @@ public class GameEngine {
 		return wind;
 	}
 
-	public void registerPlayer(GameStateListener listener) {
+	public void registerPlayer(IGameClient listener) {
 		if(this.freeEntryCells.isEmpty()) {
 			throw new IllegalStateException(String.format("Game is full, no more room for more players"));
 		}
