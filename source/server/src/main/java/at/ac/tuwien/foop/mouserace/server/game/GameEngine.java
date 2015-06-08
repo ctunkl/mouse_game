@@ -21,6 +21,7 @@ import at.ac.tuwien.foop.mouserace.common.domain.EntryCell;
 import at.ac.tuwien.foop.mouserace.common.domain.Field;
 import at.ac.tuwien.foop.mouserace.common.domain.Figure;
 import at.ac.tuwien.foop.mouserace.common.domain.Game;
+import at.ac.tuwien.foop.mouserace.common.domain.Limits;
 import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
 import at.ac.tuwien.foop.mouserace.common.domain.MouseState;
 import at.ac.tuwien.foop.mouserace.common.domain.Wind;
@@ -287,8 +288,8 @@ public class GameEngine {
 	 * relative to the cheese
 	 */
 	private Cell calculateTargetCell(Field field, Wind wind, Cheese cheese) {
-		double relativeSpeedX = (double)wind.getSpeedX()/Wind.MAX_WIND;
-		double relativeSpeedY = (double)wind.getSpeedY()/Wind.MAX_WIND;
+		double relativeSpeedX = (double)wind.getSpeedX()/Limits.WIND_MAX_SPEED;
+		double relativeSpeedY = (double)wind.getSpeedY()/Limits.WIND_MAX_SPEED;
 
 		int newX = moveCoordinate(cheese.getX(), field.getWidth(), relativeSpeedX);
 		int newY = moveCoordinate(cheese.getY(), field.getHeight(), relativeSpeedY);
@@ -376,8 +377,8 @@ public class GameEngine {
 
 		// for each axis: the direction with more votes wins. the wind strength
 		// is the difference between the opposing votes.
-		int speedX = Math.min(Math.max(right - left, Wind.MIN_WIND), Wind.MAX_WIND);
-		int speedY = Math.min(Math.max(up - down, Wind.MIN_WIND), Wind.MAX_WIND);
+		int speedX = Math.min(Math.max(right - left, Limits.WIND_MIN_SPEED), Limits.WIND_MAX_SPEED);
+		int speedY = Math.min(Math.max(up - down, Limits.WIND_MIN_SPEED), Limits.WIND_MAX_SPEED);
 
 		Wind newWind = new Wind();
 		newWind.setSpeedX((byte) speedX);
