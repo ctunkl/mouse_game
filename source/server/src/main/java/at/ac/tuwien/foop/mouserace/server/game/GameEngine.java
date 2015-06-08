@@ -410,6 +410,6 @@ public class GameEngine {
 	}
 
 	private int nextFreeFigureId(Collection<Figure> figures) {
-		return figures.stream().map(f -> f.getId()).max(Integer::max).orElse(0) + 1;
+		return figures.stream().map(f -> f.getId()).max(Integer::compare).orElse(0) + 1;
 	}
 }
