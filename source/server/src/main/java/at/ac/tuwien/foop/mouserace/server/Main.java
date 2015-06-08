@@ -51,6 +51,7 @@ public class Main {
 					DataOutputStream dos = new DataOutputStream(s.getOutputStream());
 					Thread.sleep(2000);
 					dos.write(new RegisterMessage().toByteArray());
+					dos.flush();
 					System.out.println("Sent RegisterMessage");
 				} catch (Exception e) {
 				}
