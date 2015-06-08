@@ -1,4 +1,4 @@
-package at.ac.tuwien.foop.mouserace.server;
+package at.ac.tuwien.foop.mouserace.server.game;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +24,7 @@ import at.ac.tuwien.foop.mouserace.common.domain.Game;
 import at.ac.tuwien.foop.mouserace.common.domain.Mouse;
 import at.ac.tuwien.foop.mouserace.common.domain.MouseState;
 import at.ac.tuwien.foop.mouserace.common.domain.Wind;
+import at.ac.tuwien.foop.mouserace.server.GameStateListener;
 import at.ac.tuwien.foop.mouserace.server.utils.Tuple;
 
 

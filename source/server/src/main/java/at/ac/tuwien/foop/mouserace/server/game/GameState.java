@@ -1,4 +1,4 @@
-package at.ac.tuwien.foop.mouserace.server;
+package at.ac.tuwien.foop.mouserace.server.game;
 
 import java.util.HashSet;
 import java.util.Set;

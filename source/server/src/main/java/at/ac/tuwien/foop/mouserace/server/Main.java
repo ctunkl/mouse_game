@@ -2,6 +2,8 @@ package at.ac.tuwien.foop.mouserace.server;
 
 import at.ac.tuwien.foop.mouserace.common.domain.Game;
 import at.ac.tuwien.foop.mouserace.common.domain.Wind;
+import at.ac.tuwien.foop.mouserace.server.game.GameEngine;
+import at.ac.tuwien.foop.mouserace.server.game.GameOptions;
 import at.ac.tuwien.foop.mouserace.server.utils.Games;
 
 /**

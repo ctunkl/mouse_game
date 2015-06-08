@@ -1,4 +1,4 @@
-package at.ac.tuwien.foop.mouserace.server;
+package at.ac.tuwien.foop.mouserace.server.game;
 
 public class GameOptions {
 	private int tickMillis = 1000;
