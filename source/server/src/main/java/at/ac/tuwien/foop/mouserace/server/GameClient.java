@@ -41,6 +41,10 @@ public class GameClient implements Runnable, IGameClient {
 		this.id = client.getInetAddress().toString();
 	}
 
+	public GameClient() {
+
+	}
+
 	@Override
 	public void run() {
 		System.out.println("Run");
@@ -66,8 +70,8 @@ public class GameClient implements Runnable, IGameClient {
 	@Override
 	public void fieldChosen(Field field) {
 		System.out.println(id+" Field chosen");
-		this.thread = new Thread(this);
-		this.thread.start();
+		//this.thread = new Thread(this);
+		//this.thread.start();
 	}
 
 	@Override

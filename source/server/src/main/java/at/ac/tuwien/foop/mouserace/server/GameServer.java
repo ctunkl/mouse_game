@@ -2,7 +2,6 @@ package at.ac.tuwien.foop.mouserace.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -26,7 +25,7 @@ public class GameServer implements Runnable {
 
 	private ServerState state;
 
-	private static final Integer MIN_PLAYERS = 2;
+	private static final Integer MIN_PLAYERS = 0;
 	private static final Integer TIMEOUT_MILLIS = 5000;
 	private Timer waitingTimer;
 
@@ -53,7 +52,7 @@ public class GameServer implements Runnable {
 	public void run(int port) throws IOException {
 		this.serverSocket = new ServerSocket(port);
 
-		startTimer();
+		/*startTimer();
 
 		while(this.state == ServerState.WAITING) {
 			try {
@@ -71,7 +70,16 @@ public class GameServer implements Runnable {
 			} catch(IOException e) {
 				System.out.println(e.getMessage());
 			}
-		}
+		}*/
+
+		GameClient client1 = new GameClient();
+		client1.setId("John");
+		this.players.add(client1);
+
+		GameClient client2 = new GameClient();
+		client2.setId("Jane");
+		this.players.add(client2);
+
 
 		System.out.println("Enough players. Game ready");
 

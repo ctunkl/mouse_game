@@ -15,9 +15,9 @@ import at.ac.tuwien.foop.mouserace.server.utils.Games;
 public class Main {
 	public static void main(String[] args) {
 
-		Game game = Games.createWithSimpleField();
+		Game game = Games.createWithComplexField();
 		Wind wind = new Wind();
-		wind.setSpeedX((byte)4);
+		wind.setSpeedX((byte)0);
 		wind.setSpeedY((byte)0);
 		game.setWind(wind);
 
@@ -25,8 +25,8 @@ public class Main {
 		options.setTickMillis(300);
 		options.setConfusedTime(4);
 
-		addPlayer(1000);
-		addPlayer(2000);
+		//addPlayer(1000);
+		//addPlayer(2000);
 
 		try {
 

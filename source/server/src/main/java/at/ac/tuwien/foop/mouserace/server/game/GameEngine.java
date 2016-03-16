@@ -1,7 +1,6 @@
 package at.ac.tuwien.foop.mouserace.server.game;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -135,8 +134,9 @@ public class GameEngine {
 		logger.info("Tick!");
 
 		// TODO receive key presses from players
-		List<Direction> directions = Arrays.asList(Direction.UP, Direction.UP, Direction.LEFT,
-						Direction.LEFT, Direction.DOWN, Direction.LEFT);
+		//List<Direction> directions = Arrays.asList(Direction.UP, Direction.UP, Direction.LEFT,
+		//				Direction.LEFT, Direction.DOWN, Direction.LEFT);
+		List<Direction> directions = Collections.emptyList();
 
 		Wind wind = calculateWind(game.getWind(), directions);
 		game.setWind(wind);
