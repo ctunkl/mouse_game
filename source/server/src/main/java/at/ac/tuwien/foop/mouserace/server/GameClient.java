@@ -22,9 +22,11 @@ public class GameClient implements Runnable, IGameClient {
 	private OutputStream os;
 
 	private DataInputStream in;
+	private PrintWriter out;
 
 	private String id;
 
+	private Thread thread;
 
 	private boolean stop = false;
 
@@ -33,6 +35,7 @@ public class GameClient implements Runnable, IGameClient {
 		this.is = client.getInputStream();
 		this.os = client.getOutputStream();
 
+		this.out = new PrintWriter(os);
 		this.in = new DataInputStream(new BufferedInputStream(client.getInputStream()));
 
 		this.id = client.getInetAddress().toString();
@@ -63,10 +66,13 @@ public class GameClient implements Runnable, IGameClient {
 	@Override
 	public void fieldChosen(Field field) {
 		System.out.println(id+" Field chosen");
+		this.thread = new Thread(this);
+		this.thread.start();
 	}
 
 	@Override
 	public void currentState(GameState state) {
+		//System.out.println(id+" received current state");
 	}
 
 	@Override

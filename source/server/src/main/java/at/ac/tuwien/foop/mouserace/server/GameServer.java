@@ -10,11 +10,11 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.google.common.base.MoreObjects;
+
 import at.ac.tuwien.foop.mouserace.common.domain.Game;
 import at.ac.tuwien.foop.mouserace.server.game.GameEngine;
 import at.ac.tuwien.foop.mouserace.server.game.GameOptions;
-
-import com.google.common.base.MoreObjects;
 
 public class GameServer implements Runnable {
 
@@ -72,6 +72,15 @@ public class GameServer implements Runnable {
 				System.out.println(e.getMessage());
 			}
 		}
+
+		System.out.println("Enough players. Game ready");
+
+		this.players.forEach(engine::registerPlayer);
+		engine.startGame();
+	}
+
+	public void addClient() {
+
 	}
 
 	private void startTimer() {
